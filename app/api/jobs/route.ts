@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
@@ -195,7 +196,7 @@ async function processUrl(resultId: string, url: string) {
       where: { id: resultId },
       data: {
         status: 'COMPLETED',
-        keywords: finalKeywords,
+        keywords: finalKeywords as unknown as Prisma.InputJsonValue,
         introText,
         outroText,
       },

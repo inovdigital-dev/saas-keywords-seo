@@ -1,13 +1,18 @@
 import * as cheerio from 'cheerio'
 
 export async function fetchAndParseUrl(url: string): Promise<string> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000)
+
   try {
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       },
-      timeout: 10000,
+      signal: controller.signal,
     })
+
+    clearTimeout(timeoutId)
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`)
@@ -41,6 +46,7 @@ Content:
 ${cleanText}
     `.trim()
   } catch (error) {
+    clearTimeout(timeoutId)
     throw new Error(`Failed to scrape ${url}: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
