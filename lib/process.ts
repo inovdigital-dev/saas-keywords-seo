@@ -45,6 +45,13 @@ export async function processJob(jobId: string) {
   }
 }
 
+// Process a single result by its id (looks up the URL itself).
+export async function processResult(resultId: string) {
+  const result = await prisma.jobResult.findUnique({ where: { id: resultId } })
+  if (!result) throw new Error('Result not found')
+  await processUrl(result.id, result.url)
+}
+
 export async function processUrl(resultId: string, url: string) {
   try {
     await prisma.jobResult.update({

@@ -5,7 +5,14 @@ import { useParams, useRouter } from 'next/navigation'
 import { Header } from '@/components/header'
 import { useAuth } from '@/hooks/use-auth'
 import { JobResults } from '@/components/jobs/job-results'
-import { ArrowLeft, Loader } from 'lucide-react'
+import { ArrowLeft, Loader2 } from 'lucide-react'
+
+const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string }> = {
+  PENDING:    { label: 'Pendente',    bg: '#fefce8', color: '#854d0e' },
+  PROCESSING: { label: 'A processar', bg: '#f5f3ff', color: '#5b21b6' },
+  COMPLETED:  { label: 'Concluído',   bg: '#f0fdf4', color: '#166534' },
+  FAILED:     { label: 'Falhado',     bg: '#fef2f2', color: '#991b1b' },
+}
 
 export default function JobDetailPage() {
   const { user, isLoading: authLoading } = useAuth()
@@ -21,61 +28,111 @@ export default function JobDetailPage() {
       return response.json()
     },
     enabled: !!jobId,
+    // Keep refreshing while the job is still running
+    refetchInterval: q => {
+      const s = (q.state.data as { status?: string } | undefined)?.status
+      return s === 'PENDING' || s === 'PROCESSING' ? 4000 : false
+    },
   })
 
   if (authLoading || isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader className="animate-spin" />
+      <div style={{ minHeight: '100vh', background: '#f5f3ff' }}>
+        <Header userEmail={user?.email} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 80 }}>
+          <Loader2 size={28} style={{ color: '#5C27D9', animation: 'spin 1s linear infinite' }} />
+        </div>
       </div>
     )
   }
 
   if (!job) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div style={{ minHeight: '100vh', background: '#f5f3ff' }}>
         <Header userEmail={user?.email} />
-        <main className="max-w-7xl mx-auto px-4 py-8">
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-gray-500">Job não encontrado</p>
+        <main style={{ maxWidth: 1000, margin: '0 auto', padding: '32px 24px' }}>
+          <div style={{ background: 'white', borderRadius: 16, padding: 48, textAlign: 'center', color: '#6b7280' }}>
+            Análise não encontrada.
           </div>
         </main>
       </div>
     )
   }
 
+  const cfg = STATUS_CONFIG[job.status] || STATUS_CONFIG.PENDING
+  const displayName = job.name?.trim() || `Análise de ${job.results.length} URL${job.results.length !== 1 ? 's' : ''}`
+  const isRunning = job.status === 'PENDING' || job.status === 'PROCESSING'
+  const completedCount = job.results.filter((r: { status: string }) => r.status === 'COMPLETED').length
+  const failedCount = job.results.filter((r: { status: string }) => r.status === 'FAILED').length
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div style={{ minHeight: '100vh', background: '#f5f3ff' }}>
       <Header userEmail={user?.email} />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main style={{ maxWidth: 1000, margin: '0 auto', padding: '32px 24px' }}>
         <button
-          onClick={() => router.back()}
-          className="flex items-center gap-2 mb-6 text-blue-600 hover:text-blue-800 font-medium"
+          onClick={() => router.push('/dashboard')}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24,
+            color: '#5C27D9', background: 'none', border: 'none', fontSize: 14, fontWeight: 500, cursor: 'pointer', padding: 0,
+          }}
         >
-          <ArrowLeft size={20} />
-          Voltar
+          <ArrowLeft size={16} />
+          Voltar ao histórico
         </button>
 
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <h1 className="text-2xl font-bold">Análise SEO</h1>
-              <p className="text-gray-500 text-sm">ID: {job.id}</p>
+        {/* Title card */}
+        <div style={{
+          background: 'white', borderRadius: 16, padding: 24, marginBottom: 20,
+          boxShadow: '0 1px 4px rgba(92,39,217,0.08)',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+            <div style={{ minWidth: 0 }}>
+              <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1a1a2e', margin: 0 }}>{displayName}</h1>
+              <p style={{ fontSize: 13, color: '#9ca3af', marginTop: 6, fontFamily: 'monospace' }}>
+                {job.id}
+              </p>
             </div>
-            <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-              job.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
-              job.status === 'PROCESSING' ? 'bg-blue-100 text-blue-800' :
-              job.status === 'FAILED' ? 'bg-red-100 text-red-800' :
-              'bg-yellow-100 text-yellow-800'
-            }`}>
-              {job.status}
-            </div>
+            <span style={{
+              padding: '6px 14px', borderRadius: 20, background: cfg.bg, color: cfg.color,
+              fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0,
+            }}>
+              {cfg.label}
+            </span>
+          </div>
+
+          {/* Summary stats */}
+          <div style={{ display: 'flex', gap: 24, marginTop: 20, paddingTop: 20, borderTop: '1px solid #f3f4f6' }}>
+            <Stat label="Total URLs" value={job.results.length} />
+            <Stat label="Concluídas" value={completedCount} color="#16a34a" />
+            <Stat label="Falhadas" value={failedCount} color={failedCount > 0 ? '#dc2626' : '#9ca3af'} />
           </div>
         </div>
 
+        {/* Running banner */}
+        {isRunning && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 12,
+            background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: 12, padding: '14px 18px', marginBottom: 20,
+          }}>
+            <Loader2 size={18} style={{ color: '#5C27D9', animation: 'spin 1s linear infinite', flexShrink: 0 }} />
+            <p style={{ fontSize: 13, color: '#5b21b6', margin: 0 }}>
+              A análise ainda está a decorrer. Os resultados aparecem automaticamente à medida que ficam prontos.
+            </p>
+          </div>
+        )}
+
         <JobResults results={job.results} />
       </main>
+    </div>
+  )
+}
+
+function Stat({ label, value, color = '#1a1a2e' }: { label: string; value: number; color?: string }) {
+  return (
+    <div>
+      <div style={{ fontSize: 24, fontWeight: 700, color }}>{value}</div>
+      <div style={{ fontSize: 12, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
     </div>
   )
 }

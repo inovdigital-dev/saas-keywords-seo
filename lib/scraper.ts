@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio'
+import { friendlyHttpError, humanizeError } from './errors'
 
 // Minimum amount of real body text for a page to be analysable.
 const MIN_CONTENT_LENGTH = 200
@@ -21,7 +22,7 @@ export async function fetchAndParseUrl(url: string): Promise<string> {
     clearTimeout(timeoutId)
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status} ao aceder à página`)
+      throw new Error(friendlyHttpError(response.status))
     }
 
     const html = await response.text()
@@ -48,7 +49,7 @@ export async function fetchAndParseUrl(url: string): Promise<string> {
 
     if (cleanText.length < MIN_CONTENT_LENGTH || looksBlocked) {
       throw new Error(
-        'Conteúdo insuficiente — a página pode estar a bloquear o acesso automático ou requer JavaScript.'
+        'A página tem pouco conteúdo legível ou requer JavaScript/anti-bot para carregar. Não foi possível extrair texto suficiente para análise.'
       )
     }
 
@@ -61,11 +62,7 @@ ${cleanText}
     `.trim()
   } catch (error) {
     clearTimeout(timeoutId)
-    const msg = error instanceof Error ? error.message : 'Erro desconhecido'
-    // Don't double-wrap our own clear messages
-    if (msg.startsWith('Conteúdo insuficiente') || msg.startsWith('HTTP')) {
-      throw new Error(msg)
-    }
-    throw new Error(`Não foi possível analisar ${url}: ${msg}`)
+    const raw = error instanceof Error ? error.message : 'Erro desconhecido'
+    throw new Error(humanizeError(raw))
   }
 }

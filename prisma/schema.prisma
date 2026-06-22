@@ -18,6 +18,7 @@ model Job {
   id        String       @id @default(cuid())
   userId    String
   user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String?      // user-provided title/description for the analysis
   status    JobStatus    @default(PENDING)
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt

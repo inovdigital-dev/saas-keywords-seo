@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
-import { processJob } from '@/lib/process'
 import { z } from 'zod'
 
-// Allow up to 60s (Vercel Hobby max) so processing completes within the request.
-export const maxDuration = 60
 export const dynamic = 'force-dynamic'
 
 const createJobSchema = z.object({
-  urls: z.array(z.string().url()).min(1).max(50),
+  urls: z.array(z.string().url()).min(1).max(200),
   userId: z.string().min(1),
   email: z.string().email().optional(),
+  name: z.string().trim().max(120).optional(),
 })
 
 // Ensure a user row exists for the given Supabase UUID, tolerating the rare
@@ -39,16 +37,19 @@ async function ensureUser(userId: string, email?: string) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { urls, userId, email } = createJobSchema.parse(body)
+    const { urls, userId, email, name } = createJobSchema.parse(body)
 
     // Ensure the user exists (id IS the Supabase UUID). Removes any dependency
     // on a separate sync call and tolerates stale email rows.
     await ensureUser(userId, email)
 
-    // Create job with one PENDING result per URL
+    // Create job with one PENDING result per URL. Processing is driven by the
+    // client one URL at a time (see /api/jobs/[jobId]/process) so each request
+    // stays well within serverless limits and progress can be shown live.
     const job = await prisma.job.create({
       data: {
         userId,
+        name: name && name.length > 0 ? name : null,
         status: 'PENDING',
         results: {
           create: urls.map(url => ({ url, status: 'PENDING' })),
@@ -57,15 +58,7 @@ export async function POST(request: NextRequest) {
       include: { results: true },
     })
 
-    // Process synchronously — detached work is killed on serverless.
-    await processJob(job.id)
-
-    const completed = await prisma.job.findUnique({
-      where: { id: job.id },
-      include: { results: true },
-    })
-
-    return NextResponse.json(completed)
+    return NextResponse.json(job)
   } catch (error) {
     console.error('Error creating job:', error)
     return NextResponse.json(

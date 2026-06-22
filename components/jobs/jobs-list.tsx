@@ -1,10 +1,10 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Eye, Loader2, BarChart2 } from 'lucide-react'
+import { Loader2, BarChart2, ChevronRight } from 'lucide-react'
 
 interface JobsListProps {
   userId: string
@@ -12,6 +12,7 @@ interface JobsListProps {
 
 interface Job {
   id: string
+  name: string | null
   status: string
   createdAt: string
   completedAt: string | null
@@ -26,6 +27,7 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; 
 }
 
 export function JobsList({ userId }: JobsListProps) {
+  const router = useRouter()
   const { data: jobs, isLoading } = useQuery({
     queryKey: ['jobs', userId],
     queryFn: async () => {
@@ -71,8 +73,8 @@ export function JobsList({ userId }: JobsListProps) {
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr style={{ background: '#faf8ff', borderBottom: '1px solid #ede9fe' }}>
-            {['Job ID', 'Status', 'URLs', 'Criado em', ''].map(h => (
-              <th key={h} style={{
+            {['Nome da análise', 'Estado', 'URLs', 'Criado em', '', 'Job ID'].map((h, i) => (
+              <th key={i} style={{
                 padding: '12px 20px',
                 textAlign: 'left',
                 fontSize: 12,
@@ -89,25 +91,30 @@ export function JobsList({ userId }: JobsListProps) {
         <tbody>
           {jobs.map((job, idx) => {
             const cfg = STATUS_CONFIG[job.status] || STATUS_CONFIG.PENDING
+            const displayName = job.name?.trim() || `Análise de ${job.results.length} URL${job.results.length !== 1 ? 's' : ''}`
             return (
-              <tr key={job.id} style={{
-                borderBottom: idx < jobs.length - 1 ? '1px solid #f3f4f6' : 'none',
-                transition: 'background 0.1s',
-              }}
+              <tr
+                key={job.id}
+                onClick={() => router.push(`/dashboard/jobs/${job.id}`)}
+                style={{
+                  borderBottom: idx < jobs.length - 1 ? '1px solid #f3f4f6' : 'none',
+                  transition: 'background 0.1s',
+                  cursor: 'pointer',
+                }}
                 onMouseEnter={e => (e.currentTarget.style.background = '#faf8ff')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
-                <td style={{ padding: '14px 20px' }}>
+                <td style={{ padding: '14px 20px', maxWidth: 320 }}>
                   <span style={{
-                    fontSize: 12,
-                    fontFamily: 'monospace',
-                    color: '#5C27D9',
-                    background: '#f5f3ff',
-                    padding: '3px 8px',
-                    borderRadius: 6,
+                    fontSize: 14,
                     fontWeight: 600,
+                    color: '#1a1a2e',
+                    display: 'block',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
                   }}>
-                    {job.id.slice(0, 8)}
+                    {displayName}
                   </span>
                 </td>
                 <td style={{ padding: '14px 20px' }}>
@@ -132,33 +139,22 @@ export function JobsList({ userId }: JobsListProps) {
                   </span>
                 </td>
                 <td style={{ padding: '14px 20px', fontSize: 13, color: '#374151', fontWeight: 500 }}>
-                  {job.results.length} URLs
+                  {job.results.length}
                 </td>
-                <td style={{ padding: '14px 20px', fontSize: 13, color: '#6b7280' }}>
+                <td style={{ padding: '14px 20px', fontSize: 13, color: '#6b7280', whiteSpace: 'nowrap' }}>
                   {format(new Date(job.createdAt), "dd MMM yyyy 'às' HH:mm", { locale: ptBR })}
                 </td>
+                <td style={{ padding: '14px 8px', width: 28 }}>
+                  <ChevronRight size={16} style={{ color: '#c4b5fd' }} />
+                </td>
                 <td style={{ padding: '14px 20px' }}>
-                  <Link
-                    href={`/dashboard/jobs/${job.id}`}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      padding: '6px 14px',
-                      background: '#f5f3ff',
-                      color: '#5C27D9',
-                      borderRadius: 8,
-                      fontSize: 13,
-                      fontWeight: 600,
-                      textDecoration: 'none',
-                      transition: 'background 0.15s',
-                    }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#ede9fe')}
-                    onMouseLeave={e => (e.currentTarget.style.background = '#f5f3ff')}
-                  >
-                    <Eye size={14} />
-                    Ver
-                  </Link>
+                  <span style={{
+                    fontSize: 12,
+                    fontFamily: 'monospace',
+                    color: '#9ca3af',
+                  }}>
+                    {job.id.slice(0, 8)}
+                  </span>
                 </td>
               </tr>
             )
