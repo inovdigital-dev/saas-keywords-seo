@@ -79,16 +79,16 @@ export default function AuthPage() {
         }} />
 
         <div style={{ position: 'relative', zIndex: 1 }}>
-          {/* Logo WPP real */}
-          <WppLogo variant="white" height={40} showCommerce={false} />
+          {/* Logo WPP real — destaque principal de marca */}
+          <WppLogo variant="white" height={58} showCommerce={false} />
 
-          {/* "Commerce" — destaque principal */}
-          <div style={{ marginTop: 12 }}>
+          {/* "Commerce" — wordmark grande */}
+          <div style={{ marginTop: 14 }}>
             <span style={{
-              fontSize: 36,
+              fontSize: 54,
               fontWeight: 800,
               color: 'white',
-              letterSpacing: '0.06em',
+              letterSpacing: '0.05em',
               textTransform: 'uppercase',
               display: 'block',
               lineHeight: 1,
@@ -96,41 +96,41 @@ export default function AuthPage() {
               Commerce
             </span>
             <div style={{
-              width: 48,
-              height: 3,
-              background: 'rgba(255,255,255,0.4)',
+              width: 72,
+              height: 4,
+              background: 'rgba(255,255,255,0.45)',
               borderRadius: 2,
-              marginTop: 10,
+              marginTop: 14,
             }} />
           </div>
 
           {/* Tagline */}
-          <div style={{ marginTop: 40 }}>
+          <div style={{ marginTop: 44 }}>
             <h2 style={{
-              fontSize: 22,
-              fontWeight: 600,
+              fontSize: 24,
+              fontWeight: 700,
               color: 'white',
-              lineHeight: 1.4,
+              lineHeight: 1.35,
               marginBottom: 12,
             }}>
-              Geração automática<br />de keywords SEO
+              Mais visibilidade orgânica,<br />menos trabalho manual
             </h2>
             <p style={{
               fontSize: 15,
-              color: 'rgba(255,255,255,0.65)',
+              color: 'rgba(255,255,255,0.7)',
               lineHeight: 1.7,
-              maxWidth: 340,
+              maxWidth: 390,
             }}>
-              Analise URLs, extraia as melhores keywords com IA e gere conteúdo SEO otimizado em segundos.
+              A WPP Commerce analisa as suas páginas, escolhe keywords com procura real e gera conteúdo SEO otimizado — para escalar produtos e categorias sem esforço.
             </p>
           </div>
 
           {/* Feature list */}
-          <div style={{ marginTop: 48, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ marginTop: 44, display: 'flex', flexDirection: 'column', gap: 14 }}>
             {[
-              { icon: '⚡', label: 'Análise com IA (Claude)' },
-              { icon: '📊', label: 'Validação de volume de pesquisa' },
-              { icon: '✍️', label: 'Textos SEO gerados automaticamente' },
+              { icon: '⚡', label: 'Keywords escolhidas por IA a partir do conteúdo real' },
+              { icon: '📊', label: 'Validadas por volume de pesquisa real' },
+              { icon: '✍️', label: 'Textos SEO prontos a publicar (intro + fecho)' },
             ].map(({ icon, label }) => (
               <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                 <div style={{
