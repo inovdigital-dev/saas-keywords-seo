@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  supabaseId String  @unique
+  createdAt DateTime @default(now())
+  jobs      Job[]
+}
+
+model Job {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    JobStatus    @default(PENDING)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  completedAt DateTime?
+  results   JobResult[]
+
+  @@index([userId])
+}
+
+model JobResult {
+  id        String        @id @default(cuid())
+  jobId     String
+  job       Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  url       String
+  status    ResultStatus  @default(PENDING)
+  keywords  Json?         // Array<{keyword, searchVolume, difficulty, selected}>
+  introText String?       @db.Text
+  outroText String?       @db.Text
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([jobId])
+  @@index([url])
+}
+
+enum JobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum ResultStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
