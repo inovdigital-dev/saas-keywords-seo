@@ -49,7 +49,7 @@ const STATUS_META: Record<string, { icon: ReactNode; label: string; color: strin
   COMPLETED:  { icon: <CheckCircle2 size={18} />, label: 'Concluído',   color: '#16a34a', bg: '#f0fdf4' },
   PROCESSING: { icon: <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />, label: 'A processar', color: '#5C27D9', bg: '#f5f3ff' },
   FAILED:     { icon: <AlertTriangle size={18} />, label: 'Falhou',     color: '#dc2626', bg: '#fef2f2' },
-  PENDING:    { icon: <Clock size={18} />,         label: 'Pendente',   color: '#854d0e', bg: '#fefce8' },
+  PENDING:    { icon: <Clock size={18} />,         label: 'Não processada', color: '#9ca3af', bg: '#f9fafb' },
 }
 
 export function JobResults({ results }: JobResultsProps) {

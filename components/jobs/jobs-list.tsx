@@ -24,6 +24,7 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; 
   PROCESSING: { label: 'A processar', bg: '#f5f3ff', color: '#5b21b6', dot: '#5C27D9' },
   COMPLETED:  { label: 'Concluído',   bg: '#f0fdf4', color: '#166534', dot: '#16a34a' },
   FAILED:     { label: 'Falhado',     bg: '#fef2f2', color: '#991b1b', dot: '#dc2626' },
+  CANCELLED:  { label: 'Interrompido', bg: '#f3f4f6', color: '#4b5563', dot: '#9ca3af' },
 }
 
 export function JobsList({ userId }: JobsListProps) {

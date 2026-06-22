@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/use-auth'
-import { Upload, Loader2, FileText } from 'lucide-react'
+import { Upload, Loader2, FileText, Square } from 'lucide-react'
 
 interface NewJobFormProps {
   onSuccess: () => void
@@ -38,6 +38,8 @@ export function NewJobForm({ onSuccess }: NewJobFormProps) {
   const [results, setResults] = useState<ResultItem[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [hintIndex, setHintIndex] = useState(0)
+  const [cancelling, setCancelling] = useState(false)
+  const cancelledRef = useRef(false)
 
   // Rotate the contextual hint while a URL is being processed
   useEffect(() => {
@@ -99,11 +101,16 @@ export function NewJobForm({ onSuccess }: NewJobFormProps) {
         status: 'PENDING' as const,
       }))
 
+      cancelledRef.current = false
+      setCancelling(false)
       setResults(jobResults)
       setPhase('processing')
 
       // 2. Process each URL sequentially, updating progress live
       for (let i = 0; i < jobResults.length; i++) {
+        // Stop if the user asked to cancel (current in-flight URL is allowed to finish)
+        if (cancelledRef.current) break
+
         setCurrentIndex(i)
         setResults(prev =>
           prev.map((r, idx) => (idx === i ? { ...r, status: 'PROCESSING' } : r))
@@ -129,7 +136,12 @@ export function NewJobForm({ onSuccess }: NewJobFormProps) {
         )
       }
 
-      // 3. Done — go straight to the results page
+      // 3. If cancelled, mark the job as cancelled server-side
+      if (cancelledRef.current) {
+        await fetch(`/api/jobs/${job.id}/cancel`, { method: 'POST' }).catch(() => {})
+      }
+
+      // 4. Go to the results page
       router.push(`/dashboard/jobs/${job.id}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro desconhecido')
@@ -206,9 +218,32 @@ export function NewJobForm({ onSuccess }: NewJobFormProps) {
           })}
         </div>
 
-        <p style={{ fontSize: 12, color: '#9ca3af', textAlign: 'center' }}>
-          Não feche esta página enquanto a análise decorre. Será redirecionado automaticamente quando terminar.
-        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+          <button
+            type="button"
+            onClick={() => { cancelledRef.current = true; setCancelling(true) }}
+            disabled={cancelling || done === results.length}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '10px 20px',
+              background: cancelling ? '#f3f4f6' : 'white',
+              color: cancelling ? '#9ca3af' : '#dc2626',
+              border: `1.5px solid ${cancelling ? '#e5e7eb' : '#fecaca'}`,
+              borderRadius: 10,
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: cancelling || done === results.length ? 'not-allowed' : 'pointer',
+            }}
+          >
+            <Square size={15} />
+            {cancelling ? 'A interromper após o URL atual…' : 'Interromper análise'}
+          </button>
+          <p style={{ fontSize: 12, color: '#9ca3af', textAlign: 'center', margin: 0 }}>
+            {cancelling
+              ? 'A análise vai parar assim que o URL atual terminar.'
+              : 'Não feche esta página enquanto a análise decorre. Será redirecionado automaticamente quando terminar.'}
+          </p>
+        </div>
       </div>
     )
   }

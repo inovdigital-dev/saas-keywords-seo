@@ -50,6 +50,7 @@ enum JobStatus {
   PROCESSING
   COMPLETED
   FAILED
+  CANCELLED
 }
 
 enum ResultStatus {

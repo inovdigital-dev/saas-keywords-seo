@@ -1,24 +1,47 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useParams, useRouter } from 'next/navigation'
 import { Header } from '@/components/header'
 import { useAuth } from '@/hooks/use-auth'
 import { JobResults } from '@/components/jobs/job-results'
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { ArrowLeft, Loader2, Pencil, Check, X } from 'lucide-react'
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string }> = {
   PENDING:    { label: 'Pendente',    bg: '#fefce8', color: '#854d0e' },
   PROCESSING: { label: 'A processar', bg: '#f5f3ff', color: '#5b21b6' },
   COMPLETED:  { label: 'Concluído',   bg: '#f0fdf4', color: '#166534' },
   FAILED:     { label: 'Falhado',     bg: '#fef2f2', color: '#991b1b' },
+  CANCELLED:  { label: 'Interrompido', bg: '#f3f4f6', color: '#4b5563' },
 }
 
 export default function JobDetailPage() {
   const { user, isLoading: authLoading } = useAuth()
   const router = useRouter()
+  const queryClient = useQueryClient()
   const params = useParams()
   const jobId = params.jobId as string
+
+  const [isEditing, setIsEditing] = useState(false)
+  const [nameInput, setNameInput] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const saveName = async () => {
+    setSaving(true)
+    try {
+      await fetch(`/api/jobs/${jobId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: nameInput }),
+      })
+      await queryClient.invalidateQueries({ queryKey: ['job', jobId] })
+      await queryClient.invalidateQueries({ queryKey: ['jobs'] })
+      setIsEditing(false)
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const { data: job, isLoading } = useQuery({
     queryKey: ['job', jobId],
@@ -87,8 +110,50 @@ export default function JobDetailPage() {
           boxShadow: '0 1px 4px rgba(92,39,217,0.08)',
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
-            <div style={{ minWidth: 0 }}>
-              <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1a1a2e', margin: 0 }}>{displayName}</h1>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              {isEditing ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input
+                    autoFocus
+                    value={nameInput}
+                    onChange={e => setNameInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') setIsEditing(false) }}
+                    maxLength={120}
+                    placeholder="Nome da análise"
+                    style={{
+                      flex: 1, fontSize: 20, fontWeight: 700, color: '#1a1a2e',
+                      padding: '6px 10px', border: '1.5px solid #5C27D9', borderRadius: 8, outline: 'none',
+                    }}
+                  />
+                  <button onClick={saveName} disabled={saving} title="Guardar" style={{
+                    display: 'flex', padding: 8, background: '#5C27D9', border: 'none', borderRadius: 8,
+                    cursor: saving ? 'wait' : 'pointer',
+                  }}>
+                    {saving ? <Loader2 size={16} style={{ color: 'white', animation: 'spin 1s linear infinite' }} /> : <Check size={16} style={{ color: 'white' }} />}
+                  </button>
+                  <button onClick={() => setIsEditing(false)} disabled={saving} title="Cancelar" style={{
+                    display: 'flex', padding: 8, background: 'white', border: '1px solid #e5e7eb', borderRadius: 8, cursor: 'pointer',
+                  }}>
+                    <X size={16} style={{ color: '#6b7280' }} />
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1a1a2e', margin: 0 }}>{displayName}</h1>
+                  <button
+                    onClick={() => { setNameInput(job.name ?? ''); setIsEditing(true) }}
+                    title="Editar nome"
+                    style={{
+                      display: 'flex', padding: 6, background: 'transparent', border: 'none',
+                      borderRadius: 6, cursor: 'pointer', color: '#9ca3af',
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.color = '#5C27D9')}
+                    onMouseLeave={e => (e.currentTarget.style.color = '#9ca3af')}
+                  >
+                    <Pencil size={16} />
+                  </button>
+                </div>
+              )}
               <p style={{ fontSize: 13, color: '#9ca3af', marginTop: 6, fontFamily: 'monospace' }}>
                 {job.id}
               </p>
