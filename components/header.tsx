@@ -3,7 +3,7 @@
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { LogOut } from 'lucide-react'
-import { WppLogo } from '@/components/wpp-logo'
+import { RankFuelLogo } from '@/components/rankfuel-logo'
 
 interface HeaderProps {
   userEmail?: string
@@ -44,7 +44,7 @@ export function Header({ userEmail }: HeaderProps) {
         position: 'relative',
         zIndex: 1,
       }}>
-        <WppLogo variant="white" height={26} showCommerce={true} commerceSize={11} />
+        <RankFuelLogo variant="light" iconSize={32} byline={true} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           {userEmail && (

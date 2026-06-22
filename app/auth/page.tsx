@@ -4,7 +4,7 @@ import { Auth } from '@supabase/auth-ui-react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { WppLogo } from '@/components/wpp-logo'
+import { RankFuelLogo } from '@/components/rankfuel-logo'
 
 export default function AuthPage() {
   const router = useRouter()
@@ -79,30 +79,15 @@ export default function AuthPage() {
         }} />
 
         <div style={{ position: 'relative', zIndex: 1 }}>
-          {/* Logo WPP real — destaque principal de marca */}
-          <WppLogo variant="white" height={58} showCommerce={false} />
-
-          {/* "Commerce" — wordmark grande */}
-          <div style={{ marginTop: 14 }}>
-            <span style={{
-              fontSize: 54,
-              fontWeight: 800,
-              color: 'white',
-              letterSpacing: '0.05em',
-              textTransform: 'uppercase',
-              display: 'block',
-              lineHeight: 1,
-            }}>
-              Commerce
-            </span>
-            <div style={{
-              width: 72,
-              height: 4,
-              background: 'rgba(255,255,255,0.45)',
-              borderRadius: 2,
-              marginTop: 14,
-            }} />
-          </div>
+          {/* RankFuel — destaque principal de marca */}
+          <RankFuelLogo variant="light" iconSize={72} wordmarkSize={52} byline={true} />
+          <div style={{
+            width: 72,
+            height: 4,
+            background: 'rgba(255,255,255,0.45)',
+            borderRadius: 2,
+            marginTop: 20,
+          }} />
 
           {/* Tagline */}
           <div style={{ marginTop: 44 }}>
@@ -164,9 +149,9 @@ export default function AuthPage() {
         padding: '56px 56px',
         boxShadow: '-8px 0 40px rgba(0,0,0,0.12)',
       }}>
-        {/* Logo dark no topo do formulário */}
+        {/* Logo no topo do formulário */}
         <div style={{ marginBottom: 40 }}>
-          <WppLogo variant="dark" height={28} showCommerce={false} />
+          <RankFuelLogo variant="dark" iconSize={30} byline={true} />
           <div style={{ marginTop: 24 }}>
             <h1 style={{
               fontSize: 26,
@@ -178,7 +163,7 @@ export default function AuthPage() {
               Bem-vindo de volta
             </h1>
             <p style={{ color: '#9ca3af', fontSize: 14 }}>
-              Aceda à plataforma <strong style={{ color: '#5C27D9' }}>WPP Commerce</strong>
+              Aceda à plataforma <strong style={{ color: '#5C27D9' }}>RankFuel</strong>
             </p>
           </div>
         </div>

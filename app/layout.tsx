@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "WPP Commerce — SEO Keywords",
-  description: "Gerador automático de keywords e conteúdo SEO",
+  title: "RankFuel — Keywords e conteúdo SEO",
+  description: "Analise URLs, descubra keywords com procura real e gere conteúdo SEO otimizado. RankFuel, by WPP Commerce.",
 };
 
 export default function RootLayout({
