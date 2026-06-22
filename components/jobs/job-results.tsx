@@ -17,6 +17,7 @@ interface JobResult {
   keywords: Keyword[] | null
   introText: string | null
   outroText: string | null
+  error: string | null
 }
 
 interface JobResultsProps {
@@ -94,6 +95,14 @@ export function JobResults({ results }: JobResultsProps) {
           {/* Details */}
           {expandedResults.has(result.id) && (
             <div className="border-t border-gray-200 px-6 py-4 space-y-6">
+              {/* Error message */}
+              {result.status === 'FAILED' && result.error && (
+                <div className="bg-red-50 border border-red-200 rounded p-4">
+                  <h3 className="font-semibold text-red-800 mb-1">Erro na análise</h3>
+                  <p className="text-sm text-red-700">{result.error}</p>
+                </div>
+              )}
+
               {/* Keywords Table */}
               {result.keywords && result.keywords.length > 0 && (
                 <div>

@@ -8,9 +8,8 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
+  id        String   @id // Supabase auth user UUID
   email     String   @unique
-  supabaseId String  @unique
   createdAt DateTime @default(now())
   jobs      Job[]
 }
@@ -34,9 +33,10 @@ model JobResult {
   job       Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
   url       String
   status    ResultStatus  @default(PENDING)
-  keywords  Json?         // Array<{keyword, searchVolume, difficulty, selected}>
+  keywords  Json?         // Array<{keyword, searchVolume, difficulty, score, isValid}>
   introText String?       @db.Text
   outroText String?       @db.Text
+  error     String?       @db.Text
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 

@@ -13,14 +13,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create or update user
+    // Create or update user — id IS the Supabase auth UUID
     const user = await prisma.user.upsert({
-      where: { supabaseId: userId },
+      where: { id: userId },
       update: { email },
-      create: {
-        supabaseId: userId,
-        email,
-      },
+      create: { id: userId, email },
     })
 
     return NextResponse.json(user)

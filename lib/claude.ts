@@ -4,10 +4,25 @@ const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 })
 
+// Fast model for structured keyword extraction; quality model for prose.
+const KEYWORDS_MODEL = 'claude-haiku-4-5-20251001'
+const TEXT_MODEL = 'claude-sonnet-4-6'
+
 export interface KeywordData {
   keyword: string
   searchVolume: number
   difficulty: number
+}
+
+// Strip markdown code fences the model may wrap JSON in.
+function extractJson(text: string): string {
+  const trimmed = text.trim()
+  const fenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
+  if (fenceMatch) return fenceMatch[1].trim()
+  // Fall back to the first [...] block
+  const arrayMatch = trimmed.match(/\[[\s\S]*\]/)
+  if (arrayMatch) return arrayMatch[0]
+  return trimmed
 }
 
 // Generate initial 5 keywords for validation
@@ -37,27 +52,23 @@ Requirements:
 - difficulty: estimated ranking difficulty 1-100
 - Return exactly 5 keywords
 - IMPORTANT: Return valid JSON only, no markdown code blocks
-- Focus on keywords with potential high search volume (≥ 100 searches/month)`
+- Keywords in the same language as the page content
+- Focus on keywords with potential high search volume (>= 100 searches/month)`
 
   const message = await client.messages.create({
-    model: 'claude-opus-4-1',
+    model: KEYWORDS_MODEL,
     max_tokens: 512,
-    messages: [
-      {
-        role: 'user',
-        content: prompt,
-      },
-    ],
+    messages: [{ role: 'user', content: prompt }],
   })
 
   const responseText =
     message.content[0].type === 'text' ? message.content[0].text : ''
 
   try {
-    const keywords = JSON.parse(responseText)
+    const keywords = JSON.parse(extractJson(responseText))
     return Array.isArray(keywords) ? keywords.slice(0, 5) : []
   } catch (error) {
-    console.error('Error parsing keywords JSON:', error)
+    console.error('Error parsing keywords JSON:', error, '\nRaw:', responseText)
     return []
   }
 }
@@ -88,14 +99,9 @@ Requirements:
 Return ONLY the paragraph text, no markdown or extra formatting.`
 
   const message = await client.messages.create({
-    model: 'claude-opus-4-1',
-    max_tokens: 300,
-    messages: [
-      {
-        role: 'user',
-        content: prompt,
-      },
-    ],
+    model: TEXT_MODEL,
+    max_tokens: 400,
+    messages: [{ role: 'user', content: prompt }],
   })
 
   return message.content[0].type === 'text' ? message.content[0].text.trim() : ''
@@ -128,14 +134,9 @@ Requirements:
 Return ONLY the paragraph text, no markdown or extra formatting.`
 
   const message = await client.messages.create({
-    model: 'claude-opus-4-1',
-    max_tokens: 300,
-    messages: [
-      {
-        role: 'user',
-        content: prompt,
-      },
-    ],
+    model: TEXT_MODEL,
+    max_tokens: 400,
+    messages: [{ role: 'user', content: prompt }],
   })
 
   return message.content[0].type === 'text' ? message.content[0].text.trim() : ''
