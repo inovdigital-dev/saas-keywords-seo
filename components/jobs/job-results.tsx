@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type ReactNode } from 'react'
-import { ChevronDown, Copy, Check, AlertTriangle, CheckCircle2, Loader2, Clock } from 'lucide-react'
+import { ChevronDown, Copy, Check, AlertTriangle, CheckCircle2, Loader2, Clock, ExternalLink } from 'lucide-react'
 
 interface Keyword {
   keyword: string
@@ -88,43 +88,67 @@ export function JobResults({ results }: JobResultsProps) {
             boxShadow: '0 1px 3px rgba(92,39,217,0.05)',
           }}>
             {/* Header */}
-            <button
-              onClick={() => toggle(result.id)}
-              style={{
-                width: '100%',
-                padding: '16px 20px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 14,
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                textAlign: 'left',
-              }}
-            >
-              <ChevronDown
-                size={18}
-                style={{ color: '#9ca3af', flexShrink: 0, transition: 'transform 0.2s', transform: isOpen ? 'rotate(180deg)' : 'none' }}
-              />
-              <span style={{ color: meta.color, display: 'flex', flexShrink: 0 }}>{meta.icon}</span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{
-                  fontSize: 14, fontWeight: 600, color: '#1a1a2e', margin: 0,
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>
-                  {result.url}
-                </p>
-                <span style={{ fontSize: 12, color: meta.color, fontWeight: 500 }}>{meta.label}</span>
-              </div>
-              {result.status === 'COMPLETED' && result.keywords && (
-                <span style={{
-                  fontSize: 12, fontWeight: 600, color: '#5C27D9',
-                  background: '#f5f3ff', padding: '4px 10px', borderRadius: 20, flexShrink: 0,
-                }}>
-                  {result.keywords.length} keywords
-                </span>
-              )}
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', paddingRight: 14 }}>
+              <button
+                onClick={() => toggle(result.id)}
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  padding: '16px 20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 14,
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                }}
+              >
+                <ChevronDown
+                  size={18}
+                  style={{ color: '#9ca3af', flexShrink: 0, transition: 'transform 0.2s', transform: isOpen ? 'rotate(180deg)' : 'none' }}
+                />
+                <span style={{ color: meta.color, display: 'flex', flexShrink: 0 }}>{meta.icon}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{
+                    fontSize: 14, fontWeight: 600, color: '#1a1a2e', margin: 0,
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>
+                    {result.url}
+                  </p>
+                  <span style={{ fontSize: 12, color: meta.color, fontWeight: 500 }}>{meta.label}</span>
+                </div>
+                {result.status === 'COMPLETED' && result.keywords && (
+                  <span style={{
+                    fontSize: 12, fontWeight: 600, color: '#5C27D9',
+                    background: '#f5f3ff', padding: '4px 10px', borderRadius: 20, flexShrink: 0,
+                  }}>
+                    {result.keywords.length} keywords
+                  </span>
+                )}
+              </button>
+
+              {/* Open URL in a new tab */}
+              <a
+                href={result.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={e => e.stopPropagation()}
+                title="Abrir URL numa nova página"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
+                  marginLeft: 8, padding: '8px 12px',
+                  color: '#5C27D9', background: '#f5f3ff', border: '1px solid #ede9fe',
+                  borderRadius: 8, textDecoration: 'none', fontSize: 12, fontWeight: 600,
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#ede9fe')}
+                onMouseLeave={e => (e.currentTarget.style.background = '#f5f3ff')}
+              >
+                <ExternalLink size={14} />
+                Abrir
+              </a>
+            </div>
 
             {/* Body */}
             {isOpen && (
