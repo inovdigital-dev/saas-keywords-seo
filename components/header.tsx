@@ -44,7 +44,7 @@ export function Header({ userEmail }: HeaderProps) {
         position: 'relative',
         zIndex: 1,
       }}>
-        <WppLogo size="sm" variant="full" />
+        <WppLogo variant="white" height={26} showCommerce={true} commerceSize={11} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           {userEmail && (

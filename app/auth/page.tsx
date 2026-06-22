@@ -30,15 +30,13 @@ export default function AuthPage() {
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #3D1A9E 0%, #5C27D9 50%, #7B4FE0 100%)',
       }}>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {[0,1,2].map(i => (
+        <div style={{ display: 'flex', gap: 10 }}>
+          {[0, 1, 2].map(i => (
             <div key={i} style={{
-              width: 10,
-              height: 10,
+              width: 10, height: 10,
               borderRadius: '50%',
               background: 'white',
               opacity: 0.8,
-              animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite`,
             }} />
           ))}
         </div>
@@ -50,90 +48,129 @@ export default function AuthPage() {
     <div style={{
       display: 'flex',
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #3D1A9E 0%, #5C27D9 50%, #7B4FE0 100%)',
     }}>
-      {/* Left panel - Brand */}
+      {/* ── Left panel — Brand ── */}
       <div style={{
         flex: 1,
+        background: 'linear-gradient(145deg, #2A0F7A 0%, #3D1A9E 30%, #5C27D9 70%, #7B4FE0 100%)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        padding: '48px 64px',
+        padding: '56px 72px',
         position: 'relative',
         overflow: 'hidden',
       }}>
-        {/* Background dots pattern */}
+        {/* Dot pattern background */}
         <div style={{
           position: 'absolute',
           inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
+          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.07) 1.5px, transparent 1.5px)',
+          backgroundSize: '28px 28px',
         }} />
 
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <WppLogo size="lg" variant="full" />
+          {/* Logo WPP real */}
+          <WppLogo variant="white" height={40} showCommerce={false} />
 
-          <div style={{ marginTop: 48, color: 'white' }}>
+          {/* "Commerce" — destaque principal */}
+          <div style={{ marginTop: 12 }}>
+            <span style={{
+              fontSize: 36,
+              fontWeight: 800,
+              color: 'white',
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              display: 'block',
+              lineHeight: 1,
+            }}>
+              Commerce
+            </span>
+            <div style={{
+              width: 48,
+              height: 3,
+              background: 'rgba(255,255,255,0.4)',
+              borderRadius: 2,
+              marginTop: 10,
+            }} />
+          </div>
+
+          {/* Tagline */}
+          <div style={{ marginTop: 40 }}>
             <h2 style={{
-              fontSize: 28,
-              fontWeight: 700,
-              lineHeight: 1.3,
-              marginBottom: 16,
+              fontSize: 22,
+              fontWeight: 600,
+              color: 'white',
+              lineHeight: 1.4,
+              marginBottom: 12,
             }}>
               Geração automática<br />de keywords SEO
             </h2>
             <p style={{
-              fontSize: 16,
-              color: 'rgba(255,255,255,0.7)',
-              lineHeight: 1.6,
-              maxWidth: 360,
+              fontSize: 15,
+              color: 'rgba(255,255,255,0.65)',
+              lineHeight: 1.7,
+              maxWidth: 340,
             }}>
               Analise URLs, extraia as melhores keywords com IA e gere conteúdo SEO otimizado em segundos.
             </p>
           </div>
 
-          <div style={{ marginTop: 48, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Feature list */}
+          <div style={{ marginTop: 48, display: 'flex', flexDirection: 'column', gap: 14 }}>
             {[
-              { icon: '⚡', label: 'Análise com IA' },
+              { icon: '⚡', label: 'Análise com IA (Claude)' },
               { icon: '📊', label: 'Validação de volume de pesquisa' },
-              { icon: '✍️', label: 'Conteúdo SEO gerado automaticamente' },
+              { icon: '✍️', label: 'Textos SEO gerados automaticamente' },
             ].map(({ icon, label }) => (
-              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                 <div style={{
-                  width: 36,
-                  height: 36,
+                  width: 38,
+                  height: 38,
                   borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.15)',
+                  background: 'rgba(255,255,255,0.12)',
+                  border: '1px solid rgba(255,255,255,0.15)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: 16,
+                  flexShrink: 0,
                 }}>
                   {icon}
                 </div>
-                <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>{label}</span>
+                <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14 }}>{label}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Right panel - Auth form */}
+      {/* ── Right panel — Auth form ── */}
       <div style={{
-        width: 480,
+        width: 500,
         background: 'white',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        padding: '48px 48px',
+        padding: '56px 56px',
+        boxShadow: '-8px 0 40px rgba(0,0,0,0.12)',
       }}>
-        <div style={{ marginBottom: 32 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1a1a2e', marginBottom: 8 }}>
-            Bem-vindo de volta
-          </h1>
-          <p style={{ color: '#6b7280', fontSize: 14 }}>
-            Faça login para aceder à plataforma WPP Commerce
-          </p>
+        {/* Logo dark no topo do formulário */}
+        <div style={{ marginBottom: 40 }}>
+          <WppLogo variant="dark" height={28} showCommerce={false} />
+          <div style={{ marginTop: 24 }}>
+            <h1 style={{
+              fontSize: 26,
+              fontWeight: 800,
+              color: '#1a1a2e',
+              marginBottom: 6,
+              letterSpacing: '-0.02em',
+            }}>
+              Bem-vindo de volta
+            </h1>
+            <p style={{ color: '#9ca3af', fontSize: 14 }}>
+              Aceda à plataforma <strong style={{ color: '#5C27D9' }}>WPP Commerce</strong>
+            </p>
+          </div>
         </div>
 
         <Auth
@@ -144,32 +181,37 @@ export default function AuthPage() {
                 background: '#5C27D9',
                 color: 'white',
                 fontWeight: '600',
-                borderRadius: '8px',
+                borderRadius: '10px',
                 border: 'none',
-                padding: '12px 16px',
+                padding: '13px 16px',
                 fontSize: '14px',
                 cursor: 'pointer',
+                letterSpacing: '0.01em',
               },
               anchor: {
                 color: '#5C27D9',
                 fontWeight: '500',
               },
               input: {
-                borderRadius: '8px',
+                borderRadius: '10px',
                 border: '1.5px solid #e5e7eb',
-                padding: '12px 14px',
+                padding: '13px 14px',
                 fontSize: '14px',
                 outline: 'none',
+                transition: 'border-color 0.15s',
               },
               label: {
                 color: '#374151',
-                fontWeight: '500',
+                fontWeight: '600',
                 fontSize: '13px',
                 marginBottom: '6px',
               },
               message: {
                 color: '#dc2626',
                 fontSize: '13px',
+              },
+              divider: {
+                background: '#e5e7eb',
               },
             },
           }}
