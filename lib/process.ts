@@ -52,6 +52,23 @@ export async function processResult(resultId: string) {
   await processUrl(result.id, result.url)
 }
 
+// If no results are left to process, mark the job COMPLETED (or FAILED if all
+// failed). Uses a status guard so it never overrides a CANCELLED job.
+export async function finalizeJobIfDone(jobId: string): Promise<boolean> {
+  const remaining = await prisma.jobResult.count({
+    where: { jobId, status: { in: ['PENDING', 'PROCESSING'] } },
+  })
+  if (remaining > 0) return false
+
+  const failed = await prisma.jobResult.count({ where: { jobId, status: 'FAILED' } })
+  const total = await prisma.jobResult.count({ where: { jobId } })
+  await prisma.job.updateMany({
+    where: { id: jobId, status: { in: ['PENDING', 'PROCESSING'] } },
+    data: { status: failed === total ? 'FAILED' : 'COMPLETED', completedAt: new Date() },
+  })
+  return true
+}
+
 export async function processUrl(resultId: string, url: string) {
   try {
     await prisma.jobResult.update({

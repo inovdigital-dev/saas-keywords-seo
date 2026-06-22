@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { Header } from '@/components/header'
 import { useAuth } from '@/hooks/use-auth'
 import { JobResults } from '@/components/jobs/job-results'
-import { ArrowLeft, Loader2, Pencil, Check, X, Square } from 'lucide-react'
+import { ArrowLeft, Loader2, Pencil, Check, X, Square, RotateCw } from 'lucide-react'
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string }> = {
   PENDING:    { label: 'Pendente',    bg: '#fefce8', color: '#854d0e' },
@@ -27,6 +27,7 @@ export default function JobDetailPage() {
   const [nameInput, setNameInput] = useState('')
   const [saving, setSaving] = useState(false)
   const [cancelling, setCancelling] = useState(false)
+  const [resuming, setResuming] = useState(false)
 
   const cancelJob = async () => {
     setCancelling(true)
@@ -36,6 +37,16 @@ export default function JobDetailPage() {
       await queryClient.invalidateQueries({ queryKey: ['jobs'] })
     } finally {
       setCancelling(false)
+    }
+  }
+
+  const resumeJob = async () => {
+    setResuming(true)
+    try {
+      await fetch(`/api/jobs/${jobId}/run`, { method: 'POST' })
+      await queryClient.invalidateQueries({ queryKey: ['job', jobId] })
+    } finally {
+      setTimeout(() => setResuming(false), 1500)
     }
   }
 
@@ -99,6 +110,14 @@ export default function JobDetailPage() {
   const isRunning = job.status === 'PENDING' || job.status === 'PROCESSING'
   const completedCount = job.results.filter((r: { status: string }) => r.status === 'COMPLETED').length
   const failedCount = job.results.filter((r: { status: string }) => r.status === 'FAILED').length
+  const processed = completedCount + failedCount
+  const pct = job.results.length > 0 ? Math.round((processed / job.results.length) * 100) : 0
+  const lastActivity = Math.max(
+    new Date(job.createdAt).getTime(),
+    ...job.results.map((r: { updatedAt: string }) => new Date(r.updatedAt).getTime())
+  )
+  // If running but nothing has progressed for a while, the chain likely died.
+  const stalled = isRunning && Date.now() - lastActivity > 90_000 && !resuming
 
   return (
     <div style={{ minHeight: '100vh', background: '#f5f3ff' }}>
@@ -186,32 +205,62 @@ export default function JobDetailPage() {
           </div>
         </div>
 
-        {/* Running banner */}
+        {/* Running banner with progress */}
         {isRunning && (
           <div style={{
-            display: 'flex', alignItems: 'center', gap: 12,
-            background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: 12, padding: '14px 18px', marginBottom: 20,
+            background: '#f5f3ff', border: `1px solid ${stalled ? '#fcd34d' : '#ddd6fe'}`,
+            borderRadius: 12, padding: '16px 18px', marginBottom: 20,
           }}>
-            <Loader2 size={18} style={{ color: '#5C27D9', animation: 'spin 1s linear infinite', flexShrink: 0 }} />
-            <p style={{ fontSize: 13, color: '#5b21b6', margin: 0, flex: 1 }}>
-              A análise está a decorrer. Os resultados aparecem automaticamente à medida que ficam prontos.
-            </p>
-            <button
-              onClick={cancelJob}
-              disabled={cancelling}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
-                padding: '8px 14px',
-                background: cancelling ? '#f3f4f6' : 'white',
-                color: cancelling ? '#9ca3af' : '#dc2626',
-                border: `1.5px solid ${cancelling ? '#e5e7eb' : '#fecaca'}`,
-                borderRadius: 8, fontSize: 13, fontWeight: 600,
-                cursor: cancelling ? 'wait' : 'pointer',
-              }}
-            >
-              <Square size={14} />
-              {cancelling ? 'A interromper…' : 'Interromper'}
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+              {stalled
+                ? <RotateCw size={18} style={{ color: '#b45309', flexShrink: 0 }} />
+                : <Loader2 size={18} style={{ color: '#5C27D9', animation: 'spin 1s linear infinite', flexShrink: 0 }} />}
+              <p style={{ fontSize: 13, color: stalled ? '#92400e' : '#5b21b6', margin: 0, flex: 1 }}>
+                {stalled
+                  ? 'A análise parece ter parado. Pode retomá-la para continuar de onde ficou.'
+                  : 'A análise está a decorrer no servidor — pode fechar esta página, que continua. Os resultados aparecem automaticamente.'}
+              </p>
+              {stalled && (
+                <button
+                  onClick={resumeJob}
+                  disabled={resuming}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, padding: '8px 14px',
+                    background: '#5C27D9', color: 'white', border: 'none', borderRadius: 8,
+                    fontSize: 13, fontWeight: 600, cursor: resuming ? 'wait' : 'pointer',
+                  }}
+                >
+                  <RotateCw size={14} style={resuming ? { animation: 'spin 1s linear infinite' } : undefined} />
+                  {resuming ? 'A retomar…' : 'Retomar'}
+                </button>
+              )}
+              <button
+                onClick={cancelJob}
+                disabled={cancelling}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, padding: '8px 14px',
+                  background: cancelling ? '#f3f4f6' : 'white',
+                  color: cancelling ? '#9ca3af' : '#dc2626',
+                  border: `1.5px solid ${cancelling ? '#e5e7eb' : '#fecaca'}`,
+                  borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: cancelling ? 'wait' : 'pointer',
+                }}
+              >
+                <Square size={14} />
+                {cancelling ? 'A interromper…' : 'Interromper'}
+              </button>
+            </div>
+            {/* Progress bar */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ flex: 1, height: 8, background: '#ede9fe', borderRadius: 99, overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%', width: `${pct}%`,
+                  background: 'linear-gradient(90deg, #5C27D9, #7B4FE0)', borderRadius: 99, transition: 'width 0.5s ease',
+                }} />
+              </div>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#5b21b6', flexShrink: 0 }}>
+                {processed}/{job.results.length}
+              </span>
+            </div>
           </div>
         )}
 
