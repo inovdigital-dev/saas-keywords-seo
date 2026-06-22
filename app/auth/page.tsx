@@ -15,10 +15,20 @@ export default function AuthPage() {
       const { data } = await supabase.auth.getSession()
       if (data.session) {
         router.push('/dashboard')
+        return
       }
       setIsLoading(false)
     }
     checkAuth()
+
+    // Redirect to dashboard after successful login/signup
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        router.push('/dashboard')
+      }
+    })
+
+    return () => listener.subscription.unsubscribe()
   }, [router])
 
   if (isLoading) {
