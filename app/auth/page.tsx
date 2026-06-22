@@ -215,7 +215,7 @@ export default function AuthPage() {
               },
             },
           }}
-          providers={['google', 'github']}
+          providers={[]}
           redirectTo={`${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`}
           localization={{
             variables: {
