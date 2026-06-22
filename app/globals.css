@@ -1,6 +1,12 @@
 @import "tailwindcss";
 
 :root {
+  --wpp-purple: #5C27D9;
+  --wpp-purple-dark: #3D1A9E;
+  --wpp-purple-deeper: #2A0F7A;
+  --wpp-purple-light: #7B4FE0;
+  --wpp-purple-faint: #EDE8FC;
+  --wpp-gradient: linear-gradient(135deg, #3D1A9E 0%, #5C27D9 50%, #7B4FE0 100%);
   --background: #ffffff;
   --foreground: #171717;
 }
@@ -10,13 +16,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {

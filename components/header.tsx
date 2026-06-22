@@ -3,6 +3,7 @@
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { LogOut } from 'lucide-react'
+import { WppLogo } from '@/components/wpp-logo'
 
 interface HeaderProps {
   userEmail?: string
@@ -17,23 +18,68 @@ export function Header({ userEmail }: HeaderProps) {
   }
 
   return (
-    <header className="bg-white border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">SEO Keywords SaaS</h1>
-            <p className="text-sm text-gray-500">Gerador automático de keywords e conteúdo SEO</p>
-          </div>
-          <div className="flex items-center gap-4">
-            {userEmail && <span className="text-sm text-gray-600">{userEmail}</span>}
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
-            >
-              <LogOut size={18} />
-              Sair
-            </button>
-          </div>
+    <header style={{
+      background: 'linear-gradient(135deg, #3D1A9E 0%, #5C27D9 60%, #7B4FE0 100%)',
+      borderBottom: '1px solid rgba(255,255,255,0.1)',
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
+      {/* Subtle dot pattern */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px)',
+        backgroundSize: '20px 20px',
+        pointerEvents: 'none',
+      }} />
+
+      <div style={{
+        maxWidth: 1280,
+        margin: '0 auto',
+        padding: '0 24px',
+        height: 64,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        position: 'relative',
+        zIndex: 1,
+      }}>
+        <WppLogo size="sm" variant="full" />
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          {userEmail && (
+            <span style={{
+              fontSize: 13,
+              color: 'rgba(255,255,255,0.75)',
+              background: 'rgba(255,255,255,0.1)',
+              padding: '4px 12px',
+              borderRadius: 20,
+            }}>
+              {userEmail}
+            </span>
+          )}
+          <button
+            onClick={handleLogout}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '8px 16px',
+              background: 'rgba(255,255,255,0.15)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              borderRadius: 8,
+              color: 'white',
+              fontSize: 13,
+              fontWeight: 500,
+              cursor: 'pointer',
+              transition: 'background 0.2s',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.25)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}
+          >
+            <LogOut size={15} />
+            Sair
+          </button>
         </div>
       </div>
     </header>

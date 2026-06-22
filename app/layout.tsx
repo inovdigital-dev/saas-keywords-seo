@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SEO Keywords SaaS",
+  title: "WPP Commerce — SEO Keywords",
   description: "Gerador automático de keywords e conteúdo SEO",
 };
 
