@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { processJob } from '@/lib/process'
 import { z } from 'zod'
@@ -13,18 +14,36 @@ const createJobSchema = z.object({
   email: z.string().email().optional(),
 })
 
+// Ensure a user row exists for the given Supabase UUID, tolerating the rare
+// case where the email is already attached to another (stale) row.
+async function ensureUser(userId: string, email?: string) {
+  const existing = await prisma.user.findUnique({ where: { id: userId } })
+  if (existing) return existing
+
+  try {
+    return await prisma.user.create({
+      data: { id: userId, email: email ?? `${userId}@users.local` },
+    })
+  } catch (e) {
+    // P2002 = unique constraint (email). Fall back to a non-colliding placeholder
+    // so job creation never crashes; email is display-only.
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+      return await prisma.user.create({
+        data: { id: userId, email: `${userId}@users.local` },
+      })
+    }
+    throw e
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { urls, userId, email } = createJobSchema.parse(body)
 
-    // Ensure the user exists (id IS the Supabase UUID). Upsert removes any
-    // dependency on a separate sync call having completed first.
-    await prisma.user.upsert({
-      where: { id: userId },
-      update: email ? { email } : {},
-      create: { id: userId, email: email ?? `${userId}@unknown.local` },
-    })
+    // Ensure the user exists (id IS the Supabase UUID). Removes any dependency
+    // on a separate sync call and tolerates stale email rows.
+    await ensureUser(userId, email)
 
     // Create job with one PENDING result per URL
     const job = await prisma.job.create({
