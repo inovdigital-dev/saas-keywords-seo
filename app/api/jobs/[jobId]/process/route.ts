@@ -38,8 +38,9 @@ export async function POST(
         where: { jobId, status: 'FAILED' },
       })
       const total = await prisma.jobResult.count({ where: { jobId } })
-      await prisma.job.update({
-        where: { id: jobId },
+      // updateMany with a status guard so we never override a CANCELLED job
+      await prisma.job.updateMany({
+        where: { id: jobId, status: { in: ['PENDING', 'PROCESSING'] } },
         data: {
           status: failedCount === total ? 'FAILED' : 'COMPLETED',
           completedAt: new Date(),

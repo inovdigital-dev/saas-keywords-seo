@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { Header } from '@/components/header'
 import { useAuth } from '@/hooks/use-auth'
 import { JobResults } from '@/components/jobs/job-results'
-import { ArrowLeft, Loader2, Pencil, Check, X } from 'lucide-react'
+import { ArrowLeft, Loader2, Pencil, Check, X, Square } from 'lucide-react'
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string }> = {
   PENDING:    { label: 'Pendente',    bg: '#fefce8', color: '#854d0e' },
@@ -26,6 +26,18 @@ export default function JobDetailPage() {
   const [isEditing, setIsEditing] = useState(false)
   const [nameInput, setNameInput] = useState('')
   const [saving, setSaving] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
+
+  const cancelJob = async () => {
+    setCancelling(true)
+    try {
+      await fetch(`/api/jobs/${jobId}/cancel`, { method: 'POST' })
+      await queryClient.invalidateQueries({ queryKey: ['job', jobId] })
+      await queryClient.invalidateQueries({ queryKey: ['jobs'] })
+    } finally {
+      setCancelling(false)
+    }
+  }
 
   const saveName = async () => {
     setSaving(true)
@@ -181,9 +193,25 @@ export default function JobDetailPage() {
             background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: 12, padding: '14px 18px', marginBottom: 20,
           }}>
             <Loader2 size={18} style={{ color: '#5C27D9', animation: 'spin 1s linear infinite', flexShrink: 0 }} />
-            <p style={{ fontSize: 13, color: '#5b21b6', margin: 0 }}>
-              A análise ainda está a decorrer. Os resultados aparecem automaticamente à medida que ficam prontos.
+            <p style={{ fontSize: 13, color: '#5b21b6', margin: 0, flex: 1 }}>
+              A análise está a decorrer. Os resultados aparecem automaticamente à medida que ficam prontos.
             </p>
+            <button
+              onClick={cancelJob}
+              disabled={cancelling}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
+                padding: '8px 14px',
+                background: cancelling ? '#f3f4f6' : 'white',
+                color: cancelling ? '#9ca3af' : '#dc2626',
+                border: `1.5px solid ${cancelling ? '#e5e7eb' : '#fecaca'}`,
+                borderRadius: 8, fontSize: 13, fontWeight: 600,
+                cursor: cancelling ? 'wait' : 'pointer',
+              }}
+            >
+              <Square size={14} />
+              {cancelling ? 'A interromper…' : 'Interromper'}
+            </button>
           </div>
         )}
 
