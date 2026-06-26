@@ -10,10 +10,11 @@ const createJobSchema = z.object({
   userId: z.string().min(1),
   email: z.string().email().optional(),
   name: z.string().trim().max(120).optional(),
+  toneOfVoice: z.string().trim().max(2000).optional().nullable(),
+  introMaxChars: z.number().int().min(100).max(1500).optional().nullable(),
+  outroMaxChars: z.number().int().min(100).max(1500).optional().nullable(),
 })
 
-// Ensure a user row exists for the given Supabase UUID, tolerating the rare
-// case where the email is already attached to another (stale) row.
 async function ensureUser(userId: string, email?: string) {
   const existing = await prisma.user.findUnique({ where: { id: userId } })
   if (existing) return existing
@@ -23,8 +24,6 @@ async function ensureUser(userId: string, email?: string) {
       data: { id: userId, email: email ?? `${userId}@users.local` },
     })
   } catch (e) {
-    // P2002 = unique constraint (email). Fall back to a non-colliding placeholder
-    // so job creation never crashes; email is display-only.
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
       return await prisma.user.create({
         data: { id: userId, email: `${userId}@users.local` },
@@ -37,19 +36,18 @@ async function ensureUser(userId: string, email?: string) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { urls, userId, email, name } = createJobSchema.parse(body)
+    const { urls, userId, email, name, toneOfVoice, introMaxChars, outroMaxChars } =
+      createJobSchema.parse(body)
 
-    // Ensure the user exists (id IS the Supabase UUID). Removes any dependency
-    // on a separate sync call and tolerates stale email rows.
     await ensureUser(userId, email)
 
-    // Create job with one PENDING result per URL. Processing is driven by the
-    // client one URL at a time (see /api/jobs/[jobId]/process) so each request
-    // stays well within serverless limits and progress can be shown live.
     const job = await prisma.job.create({
       data: {
         userId,
         name: name && name.length > 0 ? name : null,
+        toneOfVoice: toneOfVoice && toneOfVoice.length > 0 ? toneOfVoice : null,
+        introMaxChars: introMaxChars ?? null,
+        outroMaxChars: outroMaxChars ?? null,
         status: 'PENDING',
         results: {
           create: urls.map(url => ({ url, status: 'PENDING' })),

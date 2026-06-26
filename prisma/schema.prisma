@@ -15,15 +15,18 @@ model User {
 }
 
 model Job {
-  id        String       @id @default(cuid())
-  userId    String
-  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name      String?      // user-provided title/description for the analysis
-  status    JobStatus    @default(PENDING)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  completedAt DateTime?
-  results   JobResult[]
+  id            String       @id @default(cuid())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String?
+  toneOfVoice   String?      @db.Text
+  introMaxChars Int?
+  outroMaxChars Int?
+  status        JobStatus    @default(PENDING)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  completedAt   DateTime?
+  results       JobResult[]
 
   @@index([userId])
 }
@@ -34,10 +37,12 @@ model JobResult {
   job       Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
   url       String
   status    ResultStatus  @default(PENDING)
-  keywords  Json?         // Array<{keyword, searchVolume, difficulty, score, isValid}>
-  introText String?       @db.Text
-  outroText String?       @db.Text
-  error     String?       @db.Text
+  keywords        Json?    // Array<{keyword, searchVolume, difficulty, score, isValid}>
+  introText       String?  @db.Text
+  introKeywordMap Json?    // Array<{original, used}> — keyword adaptations in intro text
+  outroText       String?  @db.Text
+  outroKeywordMap Json?    // Array<{original, used}> — keyword adaptations in outro text
+  error           String?  @db.Text
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 

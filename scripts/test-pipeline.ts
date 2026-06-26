@@ -64,10 +64,15 @@ async function testUrl(url: string) {
   let introText = ''
   try {
     const ts = Date.now()
-    introText = await generateIntroText(finalKeywords!, content)
+    const introResult = await generateIntroText(finalKeywords!, content)
+    introText = introResult.text
     const words = introText.split(/\s+/).length
-    console.log(`✓ [3] Intro OK (${Date.now() - ts}ms, ${words} words):`)
+    const chars = [...introText].length
+    console.log(`✓ [3] Intro OK (${Date.now() - ts}ms, ${words} words, ${chars} chars):`)
     console.log(`    ${introText}`)
+    if (introResult.mappings.length > 0) {
+      console.log(`    mappings: ${introResult.mappings.map(m => `"${m.original}" → "${m.used}"`).join(' | ')}`)
+    }
   } catch (e) {
     console.log(`✗ [3] Intro FAILED: ${e instanceof Error ? e.message : e}`)
     return { url, ok: false, step: 'intro' }
@@ -77,10 +82,15 @@ async function testUrl(url: string) {
   let outroText = ''
   try {
     const ts = Date.now()
-    outroText = await generateOutroText(finalKeywords!, content)
+    const outroResult = await generateOutroText(finalKeywords!, content)
+    outroText = outroResult.text
     const words = outroText.split(/\s+/).length
-    console.log(`✓ [4] Outro OK (${Date.now() - ts}ms, ${words} words):`)
+    const chars = [...outroText].length
+    console.log(`✓ [4] Outro OK (${Date.now() - ts}ms, ${words} words, ${chars} chars):`)
     console.log(`    ${outroText}`)
+    if (outroResult.mappings.length > 0) {
+      console.log(`    mappings: ${outroResult.mappings.map(m => `"${m.original}" → "${m.used}"`).join(' | ')}`)
+    }
   } catch (e) {
     console.log(`✗ [4] Outro FAILED: ${e instanceof Error ? e.message : e}`)
     return { url, ok: false, step: 'outro' }

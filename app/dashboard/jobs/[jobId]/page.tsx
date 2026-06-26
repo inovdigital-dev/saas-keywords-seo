@@ -264,7 +264,11 @@ export default function JobDetailPage() {
           </div>
         )}
 
-        <JobResults results={job.results} />
+        <JobResults
+          results={job.results}
+          introMaxChars={job.introMaxChars}
+          outroMaxChars={job.outroMaxChars}
+        />
       </main>
     </div>
   )

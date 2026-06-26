@@ -12,8 +12,6 @@ import {
   rankKeywordsByScore,
 } from './ahrefs-mock'
 
-// Process all URLs in a job, sequentially. Awaited by the caller so it
-// completes within the serverless function lifetime (Vercel kills detached work).
 export async function processJob(jobId: string) {
   try {
     await prisma.job.update({
@@ -76,6 +74,15 @@ export async function processUrl(resultId: string, url: string) {
       data: { status: 'PROCESSING' },
     })
 
+    // Fetch job settings (tone of voice, char limits) alongside the result
+    const resultInfo = await prisma.jobResult.findUnique({
+      where: { id: resultId },
+      select: {
+        job: { select: { toneOfVoice: true, introMaxChars: true, outroMaxChars: true } },
+      },
+    })
+    const { toneOfVoice, introMaxChars, outroMaxChars } = resultInfo?.job ?? {}
+
     // 1. Fetch and parse page content
     console.log(`[1/5] Fetching content from ${url}...`)
     const content = await fetchAndParseUrl(url)
@@ -124,11 +131,11 @@ export async function processUrl(resultId: string, url: string) {
 
     // 3. Generate SEO intro text (top 2 keywords)
     console.log(`[3/5] Generating intro text...`)
-    const introText = await generateIntroText(finalKeywords, content)
+    const introResult = await generateIntroText(finalKeywords, content, toneOfVoice, introMaxChars)
 
     // 4. Generate SEO outro text (remaining 3 keywords)
     console.log(`[4/5] Generating outro text...`)
-    const outroText = await generateOutroText(finalKeywords, content)
+    const outroResult = await generateOutroText(finalKeywords, content, toneOfVoice, outroMaxChars)
 
     // 5. Save results
     console.log(`[5/5] Saving results...`)
@@ -137,8 +144,10 @@ export async function processUrl(resultId: string, url: string) {
       data: {
         status: 'COMPLETED',
         keywords: finalKeywords as unknown as Prisma.InputJsonValue,
-        introText,
-        outroText,
+        introText: introResult.text,
+        introKeywordMap: introResult.mappings as unknown as Prisma.InputJsonValue,
+        outroText: outroResult.text,
+        outroKeywordMap: outroResult.mappings as unknown as Prisma.InputJsonValue,
       },
     })
 

@@ -9,26 +9,112 @@ interface Keyword {
   difficulty: number
 }
 
+interface KeywordMapping {
+  original: string
+  used: string
+}
+
 interface JobResult {
   id: string
   url: string
   status: string
   keywords: Keyword[] | null
   introText: string | null
+  introKeywordMap: KeywordMapping[] | null
   outroText: string | null
+  outroKeywordMap: KeywordMapping[] | null
   error: string | null
 }
 
 interface JobResultsProps {
   results: JobResult[]
+  introMaxChars?: number | null
+  outroMaxChars?: number | null
 }
 
-// Wrap occurrences of the given keywords in <strong>, case-insensitive.
+// Keyword chip: bold + purple. If the keyword was adapted from its original form,
+// shows a tooltip on hover with the original keyword.
+function KeywordChip({ used, original }: { used: string; original: string }) {
+  const [hovered, setHovered] = useState(false)
+  const isAdapted = original.toLowerCase().trim() !== used.toLowerCase().trim()
+
+  return (
+    <span
+      style={{ position: 'relative', display: 'inline' }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <strong style={{
+        color: '#5C27D9',
+        fontWeight: 700,
+        cursor: isAdapted ? 'help' : 'default',
+        borderBottom: isAdapted ? '1.5px dashed #a78bfa' : 'none',
+      }}>
+        {used}
+      </strong>
+      {isAdapted && hovered && (
+        <span style={{
+          position: 'absolute',
+          bottom: 'calc(100% + 6px)',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#1a1a2e',
+          color: 'white',
+          fontSize: 11,
+          padding: '5px 10px',
+          borderRadius: 6,
+          whiteSpace: 'nowrap',
+          pointerEvents: 'none',
+          zIndex: 50,
+          boxShadow: '0 2px 10px rgba(0,0,0,0.25)',
+          lineHeight: 1.4,
+        }}>
+          keyword original: &ldquo;{original}&rdquo;
+          {/* arrow */}
+          <span style={{
+            position: 'absolute',
+            top: '100%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 0,
+            height: 0,
+            borderLeft: '5px solid transparent',
+            borderRight: '5px solid transparent',
+            borderTop: '5px solid #1a1a2e',
+          }} />
+        </span>
+      )}
+    </span>
+  )
+}
+
+// Highlight keywords in text using the mappings returned by Claude.
+// Falls back to exact-match highlighting for results without mapping data.
+function highlightWithMappings(text: string, mappings: KeywordMapping[]): ReactNode[] {
+  if (mappings.length === 0) return [text]
+
+  const sorted = [...mappings]
+    .filter(m => m.used?.trim())
+    .sort((a, b) => b.used.length - a.used.length)
+
+  const escaped = sorted.map(m => m.used.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+  if (escaped.length === 0) return [text]
+
+  const regex = new RegExp(`(${escaped.join('|')})`, 'gi')
+  const parts = text.split(regex)
+
+  return parts.map((part, i) => {
+    const mapping = mappings.find(m => m.used.toLowerCase() === part.toLowerCase())
+    if (!mapping) return <span key={i}>{part}</span>
+    return <KeywordChip key={i} used={part} original={mapping.original} />
+  })
+}
+
+// Legacy: highlight exact keyword matches (for old results that have no mapping data).
 function highlightKeywords(text: string, keywords: string[]): ReactNode[] {
   const valid = keywords.map(k => k.trim()).filter(Boolean)
   if (valid.length === 0) return [text]
 
-  // Longer keywords first so they win over substrings; escape regex chars.
   const escaped = valid
     .sort((a, b) => b.length - a.length)
     .map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
@@ -52,7 +138,7 @@ const STATUS_META: Record<string, { icon: ReactNode; label: string; color: strin
   PENDING:    { icon: <Clock size={18} />,         label: 'Não processada', color: '#9ca3af', bg: '#f9fafb' },
 }
 
-export function JobResults({ results }: JobResultsProps) {
+export function JobResults({ results, introMaxChars, outroMaxChars }: JobResultsProps) {
   const [expanded, setExpanded] = useState<Set<string>>(
     () => new Set(results.filter(r => r.status === 'COMPLETED').slice(0, 1).map(r => r.id))
   )
@@ -78,6 +164,8 @@ export function JobResults({ results }: JobResultsProps) {
         const isOpen = expanded.has(result.id)
         const introKws = (result.keywords ?? []).slice(0, 2).map(k => k.keyword)
         const outroKws = (result.keywords ?? []).slice(2, 5).map(k => k.keyword)
+        const introMap = result.introKeywordMap ?? []
+        const outroMap = result.outroKeywordMap ?? []
 
         return (
           <div key={result.id} style={{
@@ -128,7 +216,6 @@ export function JobResults({ results }: JobResultsProps) {
                 )}
               </button>
 
-              {/* Open URL in a new tab */}
               <a
                 href={result.url}
                 target="_blank"
@@ -153,7 +240,6 @@ export function JobResults({ results }: JobResultsProps) {
             {/* Body */}
             {isOpen && (
               <div style={{ borderTop: '1px solid #f3f4f6', padding: 20, display: 'flex', flexDirection: 'column', gap: 24 }}>
-                {/* Error */}
                 {result.status === 'FAILED' && (
                   <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: 16 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
@@ -166,7 +252,6 @@ export function JobResults({ results }: JobResultsProps) {
                   </div>
                 )}
 
-                {/* Keywords table */}
                 {result.keywords && result.keywords.length > 0 && (
                   <div>
                     <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1a1a2e', marginBottom: 12 }}>
@@ -208,25 +293,27 @@ export function JobResults({ results }: JobResultsProps) {
                   </div>
                 )}
 
-                {/* Intro text */}
                 {result.introText && (
                   <TextBlock
                     title="Texto de introdução"
-                    subtitle="Usa as 2 keywords principais (a roxo)"
+                    subtitle="keywords a roxo · passe o rato para ver a forma original"
                     text={result.introText}
                     keywords={introKws}
+                    mappings={introMap}
+                    maxChars={introMaxChars}
                     copied={copiedId === `intro-${result.id}`}
                     onCopy={() => copy(result.introText || '', `intro-${result.id}`)}
                   />
                 )}
 
-                {/* Outro text */}
                 {result.outroText && (
                   <TextBlock
                     title="Texto de fecho"
-                    subtitle="Usa as restantes keywords (a roxo)"
+                    subtitle="keywords a roxo · passe o rato para ver a forma original"
                     text={result.outroText}
                     keywords={outroKws}
+                    mappings={outroMap}
+                    maxChars={outroMaxChars}
                     copied={copiedId === `outro-${result.id}`}
                     onCopy={() => copy(result.outroText || '', `outro-${result.id}`)}
                   />
@@ -241,23 +328,49 @@ export function JobResults({ results }: JobResultsProps) {
 }
 
 function TextBlock({
-  title, subtitle, text, keywords, copied, onCopy,
+  title, subtitle, text, keywords, mappings, maxChars, copied, onCopy,
 }: {
-  title: string; subtitle: string; text: string; keywords: string[]; copied: boolean; onCopy: () => void
+  title: string
+  subtitle: string
+  text: string
+  keywords: string[]
+  mappings: KeywordMapping[]
+  maxChars?: number | null
+  copied: boolean
+  onCopy: () => void
 }) {
+  // Spread to count Unicode code points correctly (emoji = 1).
+  const charCount = [...text].length
   const wordCount = text.trim().split(/\s+/).length
+  const isOverLimit = !!maxChars && charCount > maxChars
+
+  const highlighted = mappings.length > 0
+    ? highlightWithMappings(text, mappings)
+    : highlightKeywords(text, keywords)
+
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 4 }}>
         <div>
           <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1a1a2e', margin: 0, display: 'inline' }}>{title}</h3>
           <span style={{ fontSize: 12, color: '#9ca3af', marginLeft: 8 }}>{subtitle}</span>
         </div>
-        <span style={{ fontSize: 11, color: '#9ca3af' }}>{wordCount} palavras</span>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexShrink: 0 }}>
+          <span style={{
+            fontSize: 11,
+            fontWeight: isOverLimit ? 700 : 400,
+            color: isOverLimit ? '#dc2626' : '#9ca3af',
+          }}>
+            {charCount.toLocaleString('pt-PT')} car.
+            {maxChars ? ` / ${maxChars.toLocaleString('pt-PT')}` : ''}
+            {isOverLimit ? ' — acima do limite' : ''}
+          </span>
+          <span style={{ fontSize: 11, color: '#9ca3af' }}>{wordCount} palavras</span>
+        </div>
       </div>
-      <div style={{ position: 'relative', background: '#faf8ff', border: '1px solid #ede9fe', borderRadius: 10, padding: '16px 48px 16px 16px' }}>
+      <div style={{ position: 'relative', background: '#faf8ff', border: `1px solid ${isOverLimit ? '#fecaca' : '#ede9fe'}`, borderRadius: 10, padding: '16px 48px 16px 16px' }}>
         <p style={{ fontSize: 14, color: '#374151', lineHeight: 1.7, margin: 0 }}>
-          {highlightKeywords(text, keywords)}
+          {highlighted}
         </p>
         <button
           onClick={onCopy}
