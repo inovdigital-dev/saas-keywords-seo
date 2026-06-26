@@ -73,6 +73,15 @@ Requirements:
   }
 }
 
+// Shared writing rules to keep generated copy natural, correct and durable.
+const WRITING_RULES = `Regras de escrita (MUITO IMPORTANTE):
+- Escreve em português europeu (pt-PT), natural, fluente e profissional.
+- NÃO menciones números nem dados que mudam com o tempo: quantidade de produtos, contagens, preços, percentagens, stock, datas ou estatísticas. O catálogo de uma loja online é dinâmico e esses valores ficam errados ou desatualizados.
+- Integra as keywords de forma NATURAL e gramaticalmente correta. As keywords podem vir em "formato de pesquisa" (ordem não natural, ex.: "iogurte proteína comprar"); reescreve-as de forma fluente, adaptando ordem das palavras, artigos, preposições e flexão. NUNCA insiras uma keyword tal e qual se isso quebrar a gramática ou soar estranho — o sentido e a fluência valem mais do que a correspondência exata.
+- Garante concordância correta de número e género (singular/plural, masculino/feminino) em todo o texto.
+- Usa artigos e contrações de preposições corretos e CONSISTENTES para nomes de marcas/lojas (escolhe uma forma e mantém-na, ex.: "a Auchan"/"na Auchan", nunca alternar para "no Auchan").
+- Sem keyword stuffing, sem frases de enchimento e sem inventar factos que não estejam no conteúdo da página.`
+
 // Generate intro text using top 2 keywords
 export async function generateIntroText(
   topKeywords: KeywordData[],
@@ -80,23 +89,21 @@ export async function generateIntroText(
 ): Promise<string> {
   const keywordList = topKeywords.slice(0, 2).map(k => k.keyword).join(', ')
 
-  const prompt = `Based on the following webpage content and the main keywords, write a compelling 120-150 word SEO-optimized intro paragraph for the top of the page.
+  const prompt = `Escreve um parágrafo de introdução otimizado para SEO, para o topo desta página, com base no conteúdo e nas keywords principais.
 
-KEYWORDS (use these): ${keywordList}
+KEYWORDS a usar (de forma natural): ${keywordList}
 
-WEBPAGE CONTENT:
+CONTEÚDO DA PÁGINA:
 ${content.slice(0, 2000)}
 
-Requirements:
-- Exactly 120-150 words
-- Natural language, not keyword-stuffed
-- Include BOTH keywords naturally (at least once each)
-- In Portuguese (português)
-- Engaging and professional
-- Start strong to capture attention
-- Good for click-through from search results
+${WRITING_RULES}
 
-Return ONLY the paragraph text, no markdown or extra formatting.`
+Requisitos:
+- Entre 110 e 150 palavras.
+- Inclui as duas keywords de forma natural e gramatical.
+- Início forte, tom apelativo e profissional, bom para captar o clique na pesquisa.
+
+Devolve APENAS o texto do parágrafo, sem markdown nem formatação extra.`
 
   const message = await client.messages.create({
     model: TEXT_MODEL,
@@ -114,24 +121,21 @@ export async function generateOutroText(
 ): Promise<string> {
   const keywordList = allKeywords.slice(2, 5).map(k => k.keyword).join(', ')
 
-  const prompt = `Based on the following webpage content and the main keywords, write a compelling 100-130 word SEO-optimized outro paragraph for the end of the page.
+  const prompt = `Escreve um parágrafo de fecho otimizado para SEO, para o final desta página, com base no conteúdo e nas keywords.
 
-KEYWORDS (use these): ${keywordList}
+KEYWORDS a usar (de forma natural): ${keywordList}
 
-WEBPAGE CONTENT:
+CONTEÚDO DA PÁGINA:
 ${content.slice(0, 2000)}
 
-Requirements:
-- Exactly 100-130 words
-- Natural language, not keyword-stuffed
-- Include at least 2 of the keywords naturally
-- In Portuguese (português)
-- Encourage action/engagement (call-to-action)
-- Professional tone
-- Good for conversion and internal linking
-- Summary of main points
+${WRITING_RULES}
 
-Return ONLY the paragraph text, no markdown or extra formatting.`
+Requisitos:
+- Entre 100 e 130 palavras.
+- Inclui pelo menos 2 das keywords de forma natural e gramatical.
+- Inclui uma chamada à ação (call-to-action) e tom profissional.
+
+Devolve APENAS o texto do parágrafo, sem markdown nem formatação extra.`
 
   const message = await client.messages.create({
     model: TEXT_MODEL,
