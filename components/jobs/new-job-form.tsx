@@ -206,7 +206,7 @@ export function NewJobForm({ onSuccess }: NewJobFormProps) {
                   type="range"
                   min={100}
                   max={NO_LIMIT}
-                  step={25}
+                  step={5}
                   value={introCharLimit}
                   onChange={e => setIntroCharLimit(Number(e.target.value))}
                   style={{ width: '100%', accentColor: '#5C27D9' }}
@@ -235,7 +235,7 @@ export function NewJobForm({ onSuccess }: NewJobFormProps) {
                   type="range"
                   min={100}
                   max={NO_LIMIT}
-                  step={25}
+                  step={5}
                   value={outroCharLimit}
                   onChange={e => setOutroCharLimit(Number(e.target.value))}
                   style={{ width: '100%', accentColor: '#5C27D9' }}
