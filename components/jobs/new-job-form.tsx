@@ -16,6 +16,7 @@ export function NewJobForm({ onSuccess }: NewJobFormProps) {
   const router = useRouter()
   const [inputMethod, setInputMethod] = useState<'paste' | 'upload'>('paste')
   const [name, setName] = useState('')
+  const [country, setCountry] = useState('pt')
   const [toneOfVoice, setToneOfVoice] = useState('')
   const [introCharLimit, setIntroCharLimit] = useState(NO_LIMIT)
   const [outroCharLimit, setOutroCharLimit] = useState(NO_LIMIT)
@@ -63,6 +64,7 @@ export function NewJobForm({ onSuccess }: NewJobFormProps) {
           userId: user?.id,
           email: user?.email,
           name: name.trim() || undefined,
+          country,
           toneOfVoice: toneOfVoice.trim() || null,
           introMaxChars: introCharLimit < NO_LIMIT ? introCharLimit : null,
           outroMaxChars: outroCharLimit < NO_LIMIT ? outroCharLimit : null,
@@ -130,6 +132,43 @@ export function NewJobForm({ onSuccess }: NewJobFormProps) {
           onFocus={e => (e.currentTarget.style.borderColor = '#5C27D9')}
           onBlur={e => (e.currentTarget.style.borderColor = '#e5e7eb')}
         />
+      </div>
+
+      {/* Country selector */}
+      <div>
+        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 8 }}>
+          País de pesquisa
+          <span style={{ color: '#9ca3af', fontWeight: 400, marginLeft: 6 }}>
+            (afeta os volumes e dificuldade das keywords via Ahrefs)
+          </span>
+        </label>
+        <select
+          value={country}
+          onChange={e => setCountry(e.target.value)}
+          style={{
+            width: '100%', padding: '11px 14px', border: '1.5px solid #e5e7eb',
+            borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box',
+            background: 'white', cursor: 'pointer', transition: 'border-color 0.15s',
+            appearance: 'auto',
+          }}
+          onFocus={e => (e.currentTarget.style.borderColor = '#5C27D9')}
+          onBlur={e => (e.currentTarget.style.borderColor = '#e5e7eb')}
+        >
+          <option value="pt">🇵🇹 Portugal</option>
+          <option value="br">🇧🇷 Brasil</option>
+          <option value="es">🇪🇸 Espanha</option>
+          <option value="fr">🇫🇷 França</option>
+          <option value="de">🇩🇪 Alemanha</option>
+          <option value="gb">🇬🇧 Reino Unido</option>
+          <option value="it">🇮🇹 Itália</option>
+          <option value="nl">🇳🇱 Países Baixos</option>
+          <option value="be">🇧🇪 Bélgica</option>
+          <option value="pl">🇵🇱 Polónia</option>
+          <option value="se">🇸🇪 Suécia</option>
+          <option value="us">🇺🇸 Estados Unidos</option>
+          <option value="mx">🇲🇽 México</option>
+          <option value="ar">🇦🇷 Argentina</option>
+        </select>
       </div>
 
       {/* Advanced settings toggle */}

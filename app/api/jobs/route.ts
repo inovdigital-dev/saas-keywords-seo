@@ -10,6 +10,7 @@ const createJobSchema = z.object({
   userId: z.string().min(1),
   email: z.string().email().optional(),
   name: z.string().trim().max(120).optional(),
+  country: z.string().length(2).toLowerCase().default('pt'),
   toneOfVoice: z.string().trim().max(2000).optional().nullable(),
   introMaxChars: z.number().int().min(100).max(1500).optional().nullable(),
   outroMaxChars: z.number().int().min(100).max(1500).optional().nullable(),
@@ -36,7 +37,7 @@ async function ensureUser(userId: string, email?: string) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { urls, userId, email, name, toneOfVoice, introMaxChars, outroMaxChars } =
+    const { urls, userId, email, name, country, toneOfVoice, introMaxChars, outroMaxChars } =
       createJobSchema.parse(body)
 
     await ensureUser(userId, email)
@@ -45,6 +46,7 @@ export async function POST(request: NextRequest) {
       data: {
         userId,
         name: name && name.length > 0 ? name : null,
+        country,
         toneOfVoice: toneOfVoice && toneOfVoice.length > 0 ? toneOfVoice : null,
         introMaxChars: introMaxChars ?? null,
         outroMaxChars: outroMaxChars ?? null,

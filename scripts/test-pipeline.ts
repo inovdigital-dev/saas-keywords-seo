@@ -8,7 +8,7 @@ import {
   validateKeywords,
   hasEnoughValidKeywords,
   rankKeywordsByScore,
-} from '../lib/ahrefs-mock'
+} from '../lib/ahrefs'
 
 const URLS = [
   'https://www.auchan.pt/pt/alimentacao/produtos-lacteos/iogurtes/',
@@ -43,7 +43,7 @@ async function testUrl(url: string) {
       attempt++
       const generated = await generateKeywordsForValidation(content, previousAttempts)
       if (generated.length === 0) throw new Error('0 keywords generated')
-      const validated = validateKeywords(generated)
+      const validated = await validateKeywords(generated, 'pt')
       if (hasEnoughValidKeywords(validated)) {
         finalKeywords = rankKeywordsByScore(validated)
       } else {

@@ -10,7 +10,7 @@ import {
   validateKeywords,
   hasEnoughValidKeywords,
   rankKeywordsByScore,
-} from './ahrefs-mock'
+} from './ahrefs'
 
 export async function processJob(jobId: string) {
   try {
@@ -78,10 +78,10 @@ export async function processUrl(resultId: string, url: string) {
     const resultInfo = await prisma.jobResult.findUnique({
       where: { id: resultId },
       select: {
-        job: { select: { toneOfVoice: true, introMaxChars: true, outroMaxChars: true } },
+        job: { select: { country: true, toneOfVoice: true, introMaxChars: true, outroMaxChars: true } },
       },
     })
-    const { toneOfVoice, introMaxChars, outroMaxChars } = resultInfo?.job ?? {}
+    const { country = 'pt', toneOfVoice, introMaxChars, outroMaxChars } = resultInfo?.job ?? {}
 
     // 1. Fetch and parse page content
     console.log(`[1/5] Fetching content from ${url}...`)
@@ -104,7 +104,7 @@ export async function processUrl(resultId: string, url: string) {
         throw new Error('Failed to generate keywords')
       }
 
-      const validatedKeywords = validateKeywords(generatedKeywords)
+      const validatedKeywords = await validateKeywords(generatedKeywords, country)
       const hasValidKeywords = hasEnoughValidKeywords(validatedKeywords)
 
       if (hasValidKeywords) {

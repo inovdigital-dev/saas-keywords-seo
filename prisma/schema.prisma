@@ -19,6 +19,7 @@ model Job {
   userId        String
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   name          String?
+  country       String       @default("pt") // ISO 2-letter code for Ahrefs keyword research
   toneOfVoice   String?      @db.Text
   introMaxChars Int?
   outroMaxChars Int?
